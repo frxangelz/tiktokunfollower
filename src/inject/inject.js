@@ -39,7 +39,8 @@ var config = {
 	total : 0,
 	max : 0,
 	chance: 75,
-	interval : 0
+	interval : 0,
+	unfollow_friends : true
 }
 
 function check_following_page(){
@@ -80,14 +81,19 @@ function IsUnfollowed(user){
 function _unfollow(){
 	var txt;
 	var bt;
+	var b = false;
 	bts = document.querySelectorAll($followButtons);
 	
 	for(var i = 0; i<bts.length; i++){
 		bt = bts[i];
 		if(bt) { 
 			txt = bt.textContent;
-			if(txt == 'Following'){
-				console.log("Unfollow !");
+			if(config.unfollow_friends){
+				b = (txt == 'Friends') || (txt == 'Following');
+			} else {
+				b = txt == 'Following';
+			}
+			if(b){
 				config.total++;
 				bt.click(); 
 			
@@ -127,7 +133,6 @@ function unfollow(){
 			setTimeout(function(){
 				simulateMouseOver(btns[$btn_idx]);
 			},200);
-//			break;
 			return;
 		}
 	}	
@@ -180,6 +185,7 @@ chrome.runtime.onMessage.addListener(
 		config.max = request.max;
 		config.chance = request.chance;
 		config.interval = request.interval;
+		config.unfollow_friends = request.unfollow_friends;
 		tick_count = 0;
 		if(!config.enable){
 			var info = document.getElementById("info_ex");
@@ -208,6 +214,7 @@ chrome.runtime.onMessage.addListener(
 					config.max = response.max;
 					config.chance = response.chance;
 					config.interval = response.interval;
+					config.unfollow_friends = response.unfollow_friends;
 					
 					r_interval = get_random(config.interval,config.chance); 
 					console.log("got interval : "+r_interval);
