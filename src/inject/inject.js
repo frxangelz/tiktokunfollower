@@ -15,14 +15,7 @@ function getUrlVars() {
   return vars; 
 }
 
-function deleteAllCookies() {
-    var cookies = document.cookie.split(";");
-for (var i = 0; i < cookies.length; i++) { var cookie = cookies[i]; var eqPos = cookie.indexOf("="); var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-document.cookie = name+'="";-1; path=/';
-}
-}
- 
-const _MAX_UNFOLLOW_TO_RELOAD = 100;
+const _MAX_UNFOLLOW_TO_RELOAD = 40;
 
 last_click = 0;
 last_call = 0;
@@ -57,9 +50,8 @@ function get_random(lmin,lmax){
 	return c;
 }
 
-const $userButtons = 'h3.author-uniqueId';
-const $followButtons = 'button.follow-button';
-const $confirmButton = '[data-testid="confirmationSheetConfirm"]';
+const $userButtons = 'h3.tiktok-debnpy-H3AuthorTitle';
+const $followButtons = 'button.tiktok-1svsmd8-Button';
 
 $btn_idx = 0;
 btns = null;
