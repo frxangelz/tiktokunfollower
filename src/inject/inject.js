@@ -15,7 +15,7 @@ function getUrlVars() {
   return vars; 
 }
 
-const _MAX_UNFOLLOW_TO_RELOAD = 40;
+const _MAX_UNFOLLOW_TO_RELOAD = 100;
 
 last_click = 0;
 last_call = 0;
@@ -26,6 +26,7 @@ overlimit = false;
 r_interval = 0;
 
 first = true;
+cur_unfollow = 0;
 
 var config = {
 	enable : 0,
@@ -88,7 +89,7 @@ function _unfollow(){
 			if(b){
 				config.total++;
 				bt.click(); 
-			
+				cur_unfollow++;
 				chrome.extension.sendMessage({action: 'inc'}, function(response){
 					if(response.status == false)
 						config.enable = 0;
@@ -224,7 +225,7 @@ chrome.runtime.onMessage.addListener(
 		   if(check_following_page()){
 			   
 		   if(_unfollow()) {
-				if(config.total >= _MAX_UNFOLLOW_TO_RELOAD){ no_buttons = true; return; }
+				if(cur_unfollow >= _MAX_UNFOLLOW_TO_RELOAD){ no_buttons = true; return; }
 				if(config.total >= config.max){ overlimit = true; info("Reached Total Limit : "+config.total); }
 				return;
 		   }
