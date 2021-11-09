@@ -118,12 +118,13 @@ function unfollow(){
 	btns = document.querySelectorAll($userButtons);
 	if ((!btns) || (btns.length < 1)){ 
 	
+		console.log("search 1");
 		btns = document.querySelectorAll($userButtons_1);
 		if((!btns) || (btns.length < 1)){
 			console.log("no Button Found :(");
 			no_buttons = true;
+			return; 
 		}
-		return; 
 	}
 
 	var txt;
