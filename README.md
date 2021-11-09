@@ -1,7 +1,7 @@
 # tiktokunfollower
 tiktok unfollower
 
-version : 0.0.4
+version : 0.0.5
 - updated : November 4th, 2021
 - fix tiktok layout changed
 - fix max unfollow to reload 

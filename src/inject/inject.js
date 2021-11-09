@@ -9,12 +9,6 @@ tick_count = 0;
 cur_url = "test";
 following_page = 'https://www.tiktok.com/following?lang=en';
 
-function getUrlVars() { 
-  var vars = {}; 
-  var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) { vars[key] = value; }); 
-  return vars; 
-}
-
 const _MAX_UNFOLLOW_TO_RELOAD = 100;
 
 last_click = 0;
@@ -51,8 +45,10 @@ function get_random(lmin,lmax){
 	return c;
 }
 
-const $userButtons = 'h3.tiktok-debnpy-H3AuthorTitle';
-const $followButtons = 'button.tiktok-1svsmd8-Button';
+const $userButtons = 'h3.author-uniqueId';
+const $userButtons_1 = 'h3.tiktok-debnpy-H3AuthorTitle';
+const $followButtons =  'button.follow-button';
+const $followButtons_1 = 'button.tiktok-1svsmd8-Button';
 
 $btn_idx = 0;
 btns = null;
@@ -72,10 +68,22 @@ function IsUnfollowed(user){
 }
 
 function _unfollow(){
+	
+	if((!btns) || (btns.length < 1)){
+		return;
+	}
+	
 	var txt;
 	var bt;
 	var b = false;
-	bts = document.querySelectorAll($followButtons);
+	var bts = document.querySelectorAll($followButtons);
+	if((!bts) || (bts.length < 1)){	
+		bts = document.querySelectorAll($followButtons_1);
+	}
+	
+	if((!bts) || (bts.length < 1)){	
+		return false;
+	}
 	
 	for(var i = 0; i<bts.length; i++){
 		bt = bts[i];
@@ -108,9 +116,13 @@ function unfollow(){
 	var cnt = 0;
 	
 	btns = document.querySelectorAll($userButtons);
-	if (!btns) { 
+	if ((!btns) || (btns.length < 1)){ 
 	
-		no_buttons = true;
+		btns = document.querySelectorAll($userButtons_1);
+		if((!btns) || (btns.length < 1)){
+			console.log("no Button Found :(");
+			no_buttons = true;
+		}
 		return; 
 	}
 
@@ -130,6 +142,7 @@ function unfollow(){
 		}
 	}	
 
+	console.log("No Button :(");
 	// butuh reload, tidak nemu yang dicari :)
 	no_buttons = true;
 }
@@ -224,11 +237,11 @@ chrome.runtime.onMessage.addListener(
 
 		   if(check_following_page()){
 			   
-		   if(_unfollow()) {
+			if(_unfollow()) {
 				if(cur_unfollow >= _MAX_UNFOLLOW_TO_RELOAD){ no_buttons = true; return; }
 				if(config.total >= config.max){ overlimit = true; info("Reached Total Limit : "+config.total); }
 				return;
-		   }
+			}
 
 			if (overlimit) {
 				
