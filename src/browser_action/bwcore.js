@@ -4,6 +4,7 @@ var config = {
 	max : 0,
 	chance: 75,
 	interval : 0,
+	fastway : 0,
 	unfollow_friends: true
 }
 
@@ -19,6 +20,7 @@ $(document).ready(function(){
 			config.max = $('#max-unfollow').val();
 			config.chance = $('#chance').val();
 			config.interval= $('#interval').val();
+			config.fastway= $("#fastway").is(":checked");
 			config.unfollow_friends= $("#unfollow_friends").is(":checked");
 		} else {
 			$(this).text("Start");
@@ -27,6 +29,7 @@ $(document).ready(function(){
 			config.enable = 0;
 		}
 		
+		EnableControl(config.enable ? true:false);
 		set_status();
 	});
 	
@@ -42,6 +45,7 @@ function set_status(){
 			max: config.max,
 			chance: config.chance,
 			interval: config.interval,
+			fastway: config.fastway,
 			unfollow_friends: config.unfollow_friends
 		}, function(response){});		
 
@@ -58,6 +62,7 @@ function get_status(){
 		config.max = response.max;
 		config.chance = response.chance;
 		config.interval = response.interval;
+		config.fastway = response.fastway;
 		config.unfollow_friends = response.unfollow_friends;
 		
 		if (config.enable == 0){
@@ -75,6 +80,9 @@ function get_status(){
 		$('#chance').val(config.chance);
 		$('#interval').val(config.interval);
 		$('#unfollow_friends').prop("checked",config.unfollow_friends);
+		$('#fastway').prop("checked", config.fastway);
+		
+		EnableControl(config.enable ? true:false);
 	});
 }
 
@@ -93,3 +101,13 @@ chrome.runtime.onMessage.addListener(
 		return;
 	}
 });
+
+function EnableControl(val){
+	
+	//disabled
+	$('#max-unfollow').prop("disabled", val);
+	$('#chance').prop("disabled", val);
+	$('#interval').prop("disabled", val);
+	$('#unfollow_friends').prop("disabled", val);
+	$('#fastway').prop("disabled", val);
+}

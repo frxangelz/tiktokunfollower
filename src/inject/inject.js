@@ -28,14 +28,15 @@ var config = {
 	max : 0,
 	chance: 75,
 	interval : 0,
+	fastway : 0,
 	unfollow_friends : true
 }
 
 function check_following_page(){
 
-		if(cur_url.indexOf('/following') !== -1)
-			return true;
-		return false;
+	if(cur_url.indexOf('/following') !== -1)
+		return true;
+	return false;
 }
 
 function get_random(lmin,lmax){
@@ -192,6 +193,7 @@ chrome.runtime.onMessage.addListener(
 		config.max = request.max;
 		config.chance = request.chance;
 		config.interval = request.interval;
+		config.fastway = request.fastway;
 		config.unfollow_friends = request.unfollow_friends;
 		tick_count = 0;
 		if(!config.enable){
@@ -221,6 +223,7 @@ chrome.runtime.onMessage.addListener(
 					config.max = response.max;
 					config.chance = response.chance;
 					config.interval = response.interval;
+					config.fastway = response.fastway;
 					config.unfollow_friends = response.unfollow_friends;
 					
 					r_interval = get_random(config.interval,config.chance); 
@@ -236,6 +239,12 @@ chrome.runtime.onMessage.addListener(
 
 		   show_info();
 
+		   if(config.fastway)	{
+			   UnfollowEx();
+			   return;
+		   }
+			   
+		   // check halaman following
 		   if(check_following_page()){
 			   
 			if(_unfollow()) {
@@ -255,6 +264,7 @@ chrome.runtime.onMessage.addListener(
 				if(tick_count > 30){
 			
 					console.log("No Button, Reload");
+					tick_count = 0;
 					window.location.href=cur_url;
 				} else {
 					var c = 30 - tick_count;
@@ -274,6 +284,17 @@ chrome.runtime.onMessage.addListener(
 				} else {
 					info("Waiting for : "+(r_interval - tick_count));
 				}
+		   } else {
+				if (tick_count >= r_interval){
+			    
+					tick_count = 0;
+					r_interval = get_random(config.interval,config.chance); 
+					window.location.href = following_page;
+				
+				} else {
+					info("Waiting for : "+(r_interval - tick_count));
+				}
+			   
 		   }
 				
 		   } else {
@@ -285,3 +306,128 @@ chrome.runtime.onMessage.addListener(
 	
 });
 
+
+/* FastWay */
+
+function OpenDialog(){
+
+	// check if dialog opened
+	var FollowingModalBox = document.querySelector('div.accounts-list-modal');
+	
+	if(FollowingModalBox) {
+		// already opened
+		return FollowingModalBox;
+	}
+	
+	var divs = document.querySelectorAll('div.user-list-header');
+	div = null;
+	var s = "";
+	for (var i = 0; i<divs.length; i++){
+		s = divs[i].textContent;
+		if (s.indexOf("Following accounts") !== -1){
+			console.log("found !");
+			div = divs[i];
+			break;
+		}
+	}
+	
+	if (!div) {
+		console.log("div.user-list-header not found");
+		return null;
+	}
+	
+	// check for click more
+	var p = div.querySelector('p.see-more');
+	if(p) {
+		p.click();
+	} else {
+		console.log('p.see-more not found !');
+	}
+	
+	return FollowingModalBox;
+
+}
+
+function unfollow_ex(FollowingModalBox){
+	
+	if(!FollowingModalBox) { return; }
+	
+	var cnt = 0;
+	var btns = FollowingModalBox.getElementsByTagName('button');
+	var s = '';
+	var b = false;
+	for (var i=0; i<btns.length; i++){
+		s = btns[i].textContent;
+		if(config.unfollow_friends){
+			b = (s === "Friends") || (s === "Following");
+		} else {
+			b = s === "Following";
+		}
+		
+		if (b) {
+			cnt++;
+			btns[i].scrollIntoView();
+			
+			config.total++;
+			cur_unfollow++;
+			chrome.extension.sendMessage({action: 'inc'}, function(response){
+				if(response.status == false)
+					config.enable = 0;
+			});				
+			btns[i].click();
+			//btns[i].innerHTML = "test";
+		}
+	}
+	
+	console.log("unfollowed : "+cnt);
+	return cnt;
+}
+
+function UnfollowEx(){
+
+	if (overlimit) {
+				
+		if((tick_count % 5) == 0){	info("Reached Total Limit : "+config.total); }
+			return;
+	}
+
+	if(no_buttons) {
+
+		if(tick_count > 30){
+			
+			console.log("No Button, Reload");
+			tick_count = 0;
+			window.location.href=cur_url;
+		} else {
+			var c = 30 - tick_count;
+			info("Waiting For "+c+" seconds to reload");
+		}
+		
+		return;
+	}
+	
+	if (tick_count < r_interval){
+		info("Waiting for : "+(r_interval - tick_count));
+		return;	    
+	}	
+
+	tick_count = 0;
+	r_interval = get_random(config.interval,config.chance); 
+	
+	// check for opendialog
+	var FollowingModalBox = OpenDialog();
+	if(!FollowingModalBox){ 
+		console.log("dialog not opened ...")
+		return;
+	}
+	   
+	if(unfollow_ex(FollowingModalBox) > 0) {
+		if(cur_unfollow >= _MAX_UNFOLLOW_TO_RELOAD){ no_buttons = true; return; }
+		if(config.total >= config.max){ overlimit = true; info("Reached Total Limit : "+config.total); }
+		return;
+	} else {
+		no_buttons = true;
+	}
+			   
+			   
+}

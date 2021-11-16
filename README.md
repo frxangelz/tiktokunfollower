@@ -1,6 +1,9 @@
 # tiktokunfollower
 tiktok unfollower
 
+version : 0.0.6
+- add fastway support 
+
 version : 0.0.5
 - updated : November 4th, 2021
 - fix tiktok layout changed

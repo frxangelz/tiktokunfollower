@@ -4,6 +4,7 @@ var config = {
 	max : 100,
 	interval : 5,
 	chance: 10,				// max interval ( sebelumnya chance probability )
+	fastway: 0,
 	unfollow_friends: true
 }
 
@@ -16,16 +17,18 @@ chrome.runtime.onMessage.addListener(
     if (request.action == "set"){
 		config.enable = request.enable;
 		config.total = parseInt(request.total);
+		if(config.enable) { config.total = 0; }
 		config.max = parseInt(request.max);
 		config.chance = parseInt(request.chance);
 		config.interval = parseInt(request.interval);
 		config.unfollow_friends = request.unfollow_friends;
+		config.fastway = request.fastway;
 		send_enable();
 		return;
 	}
 	
 	if(request.action == "get"){
-		var message = {action: "set", enable: config.enable, total: config.total, max:config.max, chance:config.chance, interval:config.interval, unfollow_friends:config.unfollow_friends};
+		var message = {action: "set", enable: config.enable, total: config.total, max:config.max, chance:config.chance, interval:config.interval, fastway: config.fastway, unfollow_friends:config.unfollow_friends};
 		sendResponse(message);
 		return;
 	}
@@ -47,7 +50,7 @@ chrome.runtime.onMessage.addListener(
  function send_enable(){
  
 		chrome.tabs.query({}, function(tabs) {
-		var message = {action: "set", enable: config.enable, total: config.total, max:config.max, chance: config.chance, interval:config.interval, unfollow_friends:config.unfollow_friends};
+		var message = {action: "set", enable: config.enable, total: config.total, max:config.max, chance: config.chance, interval:config.interval, fastway: config.fastway, unfollow_friends:config.unfollow_friends};
 		for (var i=0; i<tabs.length; ++i) {
 			chrome.tabs.sendMessage(tabs[i].id, message);
 		}
