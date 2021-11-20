@@ -1,6 +1,9 @@
 # tiktokunfollower
 tiktok unfollower
 
+version : 0.0.7
+- New Method (Layout)
+
 version : 0.0.6
 - add fastway support 
 
