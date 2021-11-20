@@ -7,9 +7,9 @@
 
 tick_count = 0;
 cur_url = "test";
-following_page = 'https://www.tiktok.com/following?lang=en';
+following_page = 'https://www.tiktok.com/';
 
-const _MAX_UNFOLLOW_TO_RELOAD = 100;
+const _MAX_UNFOLLOW_TO_RELOAD = 40;
 
 last_click = 0;
 last_call = 0;
@@ -34,7 +34,7 @@ var config = {
 
 function check_following_page(){
 
-	if(cur_url.indexOf('/following') !== -1)
+	if(cur_url.indexOf('tiktok.com') !== -1)
 		return true;
 	return false;
 }
@@ -70,80 +70,71 @@ function IsUnfollowed(user){
 
 function _unfollow(){
 	
-	if((!btns) || (btns.length < 1)){
-		return;
-	}
+	if(cur_url.indexOf("/@") === -1){
 	
-	var txt;
-	var bt;
-	var b = false;
-	var bts = document.querySelectorAll($followButtons);
-	if((!bts) || (bts.length < 1)){	
-		bts = document.querySelectorAll($followButtons_1);
-	}
-	
-	if((!bts) || (bts.length < 1)){	
 		return false;
 	}
 	
-	for(var i = 0; i<bts.length; i++){
-		bt = bts[i];
-		if(bt) { 
-			txt = bt.textContent;
-			if(config.unfollow_friends){
-				b = (txt == 'Friends') || (txt == 'Following');
-			} else {
-				b = txt == 'Following';
-			}
-			if(b){
-				config.total++;
-				bt.click(); 
-				cur_unfollow++;
-				chrome.extension.sendMessage({action: 'inc'}, function(response){
-					if(response.status == false)
-						config.enable = 0;
-				});	
-
-				return true;
-			}
-		}		
+	var btn = document.querySelector('button[type="button"]');
+	if(!btn) { 
+		console.log('button[type="button"] not found !');
+		return false; 
 	}
 	
-	return false;
+	var txt = btn.textContent;
+	if(txt === "Follow"){
+		console.log("Already Unfollowed");
+		return false;
+	}
+
+	btn = document.querySelector('div.tiktok-ugux24-DivFollowIconContainer');
+	if(!btn){
+		console.log('div.tiktok-ugux24-DivFollowIconContainer not found !');
+		return false;
+	}
+	
+	btn.click();
+
+	config.total++;
+	cur_unfollow++;
+	chrome.extension.sendMessage({action: 'inc'}, function(response){
+				if(response.status == false)
+					config.enable = 0;
+	});	
+
+	return true;
 }
 
 function unfollow(){
 
-	var cnt = 0;
-	
-	btns = document.querySelectorAll($userButtons);
+	var btns = document.querySelectorAll('h4[data-e2e="following-user-title"]');
 	if ((!btns) || (btns.length < 1)){ 
 	
-		console.log("search 1");
-		btns = document.querySelectorAll($userButtons_1);
-		if((!btns) || (btns.length < 1)){
-			console.log("no Button Found :(");
-			no_buttons = true;
-			return; 
-		}
+		console.log("no Button Found :(");
+		no_buttons = true;
+		return; 
 	}
-
+	
 	var txt;
 	for(var i=0; i<btns.length; i++){
 
-		txt = btns[i].textContent;
-		if(!IsUnfollowed(txt)) { 
-		
-			$unfollowed.push(txt);
-			$btn_idx = i;
-			btns[$btn_idx].scrollIntoView();
-			setTimeout(function(){
-				simulateMouseOver(btns[$btn_idx]);
-			},200);
-			return;
-		}
+		txt = btns[i].getAttribute("signed");
+		if(txt === "1") { continue; }
+
+		btns[i].setAttribute("signed","1");
+		btns[i].scrollIntoView();
+		btns[i].click();
+		return;
 	}	
 
+	var p = document.getElementsByTagName("p");
+	for(var i=0; i<p.length; i++){
+  		if(p[i].textContent === 'See more'){
+			p[i].click();
+			return;
+  		}
+	}	
+	
 	console.log("No Button :(");
 	// butuh reload, tidak nemu yang dicari :)
 	no_buttons = true;
@@ -239,11 +230,6 @@ chrome.runtime.onMessage.addListener(
 
 		   show_info();
 
-		   if(config.fastway)	{
-			   UnfollowEx();
-			   return;
-		   }
-			   
 		   // check halaman following
 		   if(check_following_page()){
 			   
@@ -261,18 +247,26 @@ chrome.runtime.onMessage.addListener(
 			   
 			if(no_buttons) {
 
-				if(tick_count > 30){
+				var no_button_wait = 30;
+				if(config.fastway) { no_button_wait = 10; }
+				if(tick_count > no_button_wait){
 			
 					console.log("No Button, Reload");
 					tick_count = 0;
 					window.location.href=cur_url;
 				} else {
-					var c = 30 - tick_count;
+					var c = no_button_wait - tick_count;
 					info("Waiting For "+c+" seconds to reload");
 				}
+				
 		
 				return;
 			}
+			   
+			   if(config.fastway) { 
+				   r_interval = 1;
+				   info("no delay");
+				}
 			   
 				if (tick_count >= r_interval){
 			    
@@ -306,128 +300,3 @@ chrome.runtime.onMessage.addListener(
 	
 });
 
-
-/* FastWay */
-
-function OpenDialog(){
-
-	// check if dialog opened
-	var FollowingModalBox = document.querySelector('div.accounts-list-modal');
-	
-	if(FollowingModalBox) {
-		// already opened
-		return FollowingModalBox;
-	}
-	
-	var divs = document.querySelectorAll('div.user-list-header');
-	div = null;
-	var s = "";
-	for (var i = 0; i<divs.length; i++){
-		s = divs[i].textContent;
-		if (s.indexOf("Following accounts") !== -1){
-			console.log("found !");
-			div = divs[i];
-			break;
-		}
-	}
-	
-	if (!div) {
-		console.log("div.user-list-header not found");
-		return null;
-	}
-	
-	// check for click more
-	var p = div.querySelector('p.see-more');
-	if(p) {
-		p.click();
-	} else {
-		console.log('p.see-more not found !');
-	}
-	
-	return FollowingModalBox;
-
-}
-
-function unfollow_ex(FollowingModalBox){
-	
-	if(!FollowingModalBox) { return; }
-	
-	var cnt = 0;
-	var btns = FollowingModalBox.getElementsByTagName('button');
-	var s = '';
-	var b = false;
-	for (var i=0; i<btns.length; i++){
-		s = btns[i].textContent;
-		if(config.unfollow_friends){
-			b = (s === "Friends") || (s === "Following");
-		} else {
-			b = s === "Following";
-		}
-		
-		if (b) {
-			cnt++;
-			btns[i].scrollIntoView();
-			
-			config.total++;
-			cur_unfollow++;
-			chrome.extension.sendMessage({action: 'inc'}, function(response){
-				if(response.status == false)
-					config.enable = 0;
-			});				
-			btns[i].click();
-			//btns[i].innerHTML = "test";
-		}
-	}
-	
-	console.log("unfollowed : "+cnt);
-	return cnt;
-}
-
-function UnfollowEx(){
-
-	if (overlimit) {
-				
-		if((tick_count % 5) == 0){	info("Reached Total Limit : "+config.total); }
-			return;
-	}
-
-	if(no_buttons) {
-
-		if(tick_count > 30){
-			
-			console.log("No Button, Reload");
-			tick_count = 0;
-			window.location.href=cur_url;
-		} else {
-			var c = 30 - tick_count;
-			info("Waiting For "+c+" seconds to reload");
-		}
-		
-		return;
-	}
-	
-	if (tick_count < r_interval){
-		info("Waiting for : "+(r_interval - tick_count));
-		return;	    
-	}	
-
-	tick_count = 0;
-	r_interval = get_random(config.interval,config.chance); 
-	
-	// check for opendialog
-	var FollowingModalBox = OpenDialog();
-	if(!FollowingModalBox){ 
-		console.log("dialog not opened ...")
-		return;
-	}
-	   
-	if(unfollow_ex(FollowingModalBox) > 0) {
-		if(cur_unfollow >= _MAX_UNFOLLOW_TO_RELOAD){ no_buttons = true; return; }
-		if(config.total >= config.max){ overlimit = true; info("Reached Total Limit : "+config.total); }
-		return;
-	} else {
-		no_buttons = true;
-	}
-			   
-			   
-}
