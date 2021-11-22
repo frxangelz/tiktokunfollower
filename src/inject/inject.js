@@ -87,13 +87,19 @@ function _unfollow(){
 		return false;
 	}
 
+	var div = btn.parentNode.parentNode;
+	
+/*	
 	btn = document.querySelector('div.tiktok-ugux24-DivFollowIconContainer');
 	if(!btn){
+		btn = document.querySelector('div[class*="icon-follow"]');
 		console.log('div.tiktok-ugux24-DivFollowIconContainer not found !');
 		return false;
 	}
-	
-	btn.click();
+*/
+	btn = div.querySelector('svg');
+	if(!btn) { console.log("no svg button found !"); return false; }
+	btn.parentNode.click();
 
 	config.total++;
 	cur_unfollow++;
@@ -105,6 +111,8 @@ function _unfollow(){
 	return true;
 }
 
+
+/*
 function unfollow(){
 
 	var btns = document.querySelectorAll('h4[data-e2e="following-user-title"]');
@@ -139,7 +147,73 @@ function unfollow(){
 	// butuh reload, tidak nemu yang dicari :)
 	no_buttons = true;
 }
- 
+*/ 
+
+//Following accounts, tiktok ada 2 layout, di kantor ie dan chrome beda :(
+var FollowingSection = null;
+var last_href = '';
+function unfollow(){
+
+	if(!FollowingSection){
+		
+		var p = document.querySelector('p[data-e2e="following-accounts"]');
+		if(p){
+			FollowingSection = p.parentNode;
+		} else {
+		
+			var divs = document.getElementsByTagName('div');
+			for(var i=0; i<divs.length; i++){
+		
+				if (divs[i].textContent === 'Following accounts'){
+					FollowingSection = divs[i].parentNode;
+					break;
+				}
+			}
+		}
+	}
+	
+	if(!FollowingSection){
+		console.log("No Section Found !");
+		return;
+	}
+
+	var btns = FollowingSection.querySelectorAll('a[href*="/@"]');
+	if ((!btns) || (btns.length < 1)){ 
+	
+		console.log("no Button Found :(");
+		no_buttons = true;
+		return; 
+	}
+	
+	var txt;
+	for(var i=0; i<btns.length; i++){
+
+		txt = btns[i].getAttribute("signed");
+		if(txt === "1") { continue; }
+		btns[i].setAttribute("signed","1");
+		
+		txt = btns[i].getAttribute('href');
+		if(txt === last_href){ continue; }
+		last_href = txt;
+		
+		btns[i].scrollIntoView();
+		btns[i].click();
+		return;
+	}	
+
+	var p = FollowingSection.getElementsByTagName("p");
+	for(var i=0; i<p.length; i++){
+  		if(p[i].textContent === 'See more'){
+			p[i].click();
+			return;
+  		}
+	}	
+	
+	console.log("No Button :(");
+	// butuh reload, tidak nemu yang dicari :)
+	no_buttons = true;
+}
+
 function show_info(){
 
 	var info = document.getElementById("info_ex");
@@ -234,7 +308,7 @@ chrome.runtime.onMessage.addListener(
 		   if(check_following_page()){
 			   
 			if(_unfollow()) {
-				if(cur_unfollow >= _MAX_UNFOLLOW_TO_RELOAD){ no_buttons = true; return; }
+				if(cur_unfollow >= _MAX_UNFOLLOW_TO_RELOAD){ no_buttons = true; tick_count = 0; return; }
 				if(config.total >= config.max){ overlimit = true; info("Reached Total Limit : "+config.total); }
 				return;
 			}
@@ -247,8 +321,8 @@ chrome.runtime.onMessage.addListener(
 			   
 			if(no_buttons) {
 
-				var no_button_wait = 30;
-				if(config.fastway) { no_button_wait = 10; }
+				var no_button_wait = 15;
+				if(config.fastway) { no_button_wait = 5; }
 				if(tick_count > no_button_wait){
 			
 					console.log("No Button, Reload");

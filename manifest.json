@@ -5,7 +5,7 @@
             "src/bg/background.js"
         ]
     },
-  "version": "0.0.7",
+  "version": "0.0.8",
   "manifest_version": 2,
   "description": "very simple Macro unfollower for tiktok",
   "homepage_url": "http://frxangelz.blogspot.com",
