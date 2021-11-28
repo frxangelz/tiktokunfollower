@@ -9,7 +9,7 @@ tick_count = 0;
 cur_url = "test";
 following_page = 'https://www.tiktok.com/';
 
-const _MAX_UNFOLLOW_TO_RELOAD = 40;
+const _MAX_UNFOLLOW_TO_RELOAD = 1000;
 
 last_click = 0;
 last_call = 0;
