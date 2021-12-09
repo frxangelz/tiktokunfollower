@@ -9,6 +9,8 @@ tick_count = 0;
 cur_url = "test";
 following_page = 'https://www.tiktok.com/';
 
+const _TIKTOK_HOME = 'https://www.tiktok.com/';
+
 const _MAX_UNFOLLOW_TO_RELOAD = 40;
 
 last_click = 0;
@@ -78,6 +80,7 @@ function _unfollow(){
 	var btn = document.querySelector('button[type="button"]');
 	if(!btn) { 
 		console.log('button[type="button"] not found !');
+		cur_unfollow = _MAX_UNFOLLOW_TO_RELOAD;
 		return false; 
 	}
 	
@@ -89,16 +92,8 @@ function _unfollow(){
 
 	var div = btn.parentNode.parentNode;
 	
-/*	
-	btn = document.querySelector('div.tiktok-ugux24-DivFollowIconContainer');
-	if(!btn){
-		btn = document.querySelector('div[class*="icon-follow"]');
-		console.log('div.tiktok-ugux24-DivFollowIconContainer not found !');
-		return false;
-	}
-*/
 	btn = div.querySelector('svg');
-	if(!btn) { console.log("no svg button found !"); return false; }
+	if(!btn) { console.log("no svg button found !"); cur_unfollow = _MAX_UNFOLLOW_TO_RELOAD; return false; }
 	btn.parentNode.click();
 
 	config.total++;
@@ -111,43 +106,6 @@ function _unfollow(){
 	return true;
 }
 
-
-/*
-function unfollow(){
-
-	var btns = document.querySelectorAll('h4[data-e2e="following-user-title"]');
-	if ((!btns) || (btns.length < 1)){ 
-	
-		console.log("no Button Found :(");
-		no_buttons = true;
-		return; 
-	}
-	
-	var txt;
-	for(var i=0; i<btns.length; i++){
-
-		txt = btns[i].getAttribute("signed");
-		if(txt === "1") { continue; }
-
-		btns[i].setAttribute("signed","1");
-		btns[i].scrollIntoView();
-		btns[i].click();
-		return;
-	}	
-
-	var p = document.getElementsByTagName("p");
-	for(var i=0; i<p.length; i++){
-  		if(p[i].textContent === 'See more'){
-			p[i].click();
-			return;
-  		}
-	}	
-	
-	console.log("No Button :(");
-	// butuh reload, tidak nemu yang dicari :)
-	no_buttons = true;
-}
-*/ 
 
 //Following accounts, tiktok ada 2 layout, di kantor ie dan chrome beda :(
 var FollowingSection = null;
@@ -174,6 +132,7 @@ function unfollow(){
 	
 	if(!FollowingSection){
 		console.log("No Section Found !");
+		cur_unfollow = _MAX_UNFOLLOW_TO_RELOAD;
 		return;
 	}
 
@@ -183,6 +142,13 @@ function unfollow(){
 		console.log("no Button Found :(");
 		no_buttons = true;
 		return; 
+	}
+	
+	if (btns.length < 4) {
+		
+		overlimit = true;
+		info("No following acounts left");
+		return;
 	}
 	
 	var txt;
@@ -248,7 +214,23 @@ function simulateMouseOver(myTarget) {
     //console.log("not canceled");
   }
 }
-	
+
+function follow_one(){
+
+	var btn = document.getElementsByTagName('button');
+	for(var i=0; i<btn.length; i++){
+
+		if (btn[i].textContent === 'Follow'){
+			btn[i].click();
+			tick_count = 0;
+			setTimeout(function(){
+				window.location.href = _TIKTOK_HOME;
+			},1000);
+			break;
+		}
+	}	
+}
+
 chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
 
@@ -319,15 +301,24 @@ chrome.runtime.onMessage.addListener(
 				return;
 			}
 			   
+			if(cur_url.indexOf("act=follow") !== -1){
+				tick_count = 0;
+				follow_one();
+				return;
+			}
+			
 			if(no_buttons) {
 
 				var no_button_wait = 15;
-				if(config.fastway) { no_button_wait = 5; }
+				//if(config.fastway) { no_button_wait = 5; }
 				if(tick_count > no_button_wait){
 			
 					console.log("No Button, Reload");
 					tick_count = 0;
-					window.location.href=cur_url;
+					window.location.href=_TIKTOK_HOME+"?act=follow";
+					
+					//goToProfile();
+//					follow_one();
 				} else {
 					var c = no_button_wait - tick_count;
 					info("Waiting For "+c+" seconds to reload");

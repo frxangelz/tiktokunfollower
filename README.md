@@ -1,16 +1,8 @@
 # tiktokunfollower
 tiktok unfollower
 
-version : 0.0.8
-- New Method (Layout)
-
-version : 0.0.6
-- add fastway support 
-
-version : 0.0.5
-- updated : November 4th, 2021
-- fix tiktok layout changed
-- fix max unfollow to reload 
+version L: 0.0.9
+- Fix Following List Not Showing
 
 
 very simple tiktok macro to unfollow all followed users, use with random interval so it looks like normal user's activity tiktok unfollower macro is the best tool for easy and quick tiktok unfollow. it will mass unfollow people on tiktok while you're away.
